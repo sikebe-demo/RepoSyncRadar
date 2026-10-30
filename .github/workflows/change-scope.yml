@@ -83,16 +83,7 @@ jobs:
               $fromSha -notmatch '^0+$') {
             git cat-file -e "${fromSha}^{commit}" 2>$null
             if ($LASTEXITCODE -eq 0) {
-              git diff --quiet $fromSha $toSha -- . `
-                ':(exclude,icase,glob)**/*.md' `
-                ':(exclude)apm.yml' `
-                ':(exclude)apm.lock.yaml' `
-                ':(exclude,glob).agents/skills/**'
-              if ($LASTEXITCODE -eq 0) {
-                $runCi = $false
-              } elseif ($LASTEXITCODE -ne 1) {
-                throw "Unable to compare changes between $fromSha and $toSha."
-              }
+              $runCi = & ./scripts/Get-CiChangeScope.ps1 -FromSha $fromSha -ToSha $toSha
             } else {
               Write-Warning "Commit $fromSha is unavailable; running CI conservatively."
             }

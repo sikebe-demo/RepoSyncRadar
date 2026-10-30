@@ -35,6 +35,7 @@ try {
             git -c commit.gpgsign=false commit --quiet -m 'Change fixture'
             $to = git rev-parse HEAD
             $actual = & $scopeScript -FromSha $from -ToSha $to
+            if ($LASTEXITCODE -ne 0) { throw "CI scope left a failing exit code for $($case[0]): $LASTEXITCODE" }
             if ($actual -isnot [bool] -or $actual -ne $case[1]) {
                 throw "Incorrect CI scope for $($case[0]): $actual"
             }

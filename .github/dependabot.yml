@@ -40,3 +40,7 @@ updates:
     directory: "/tools/ghalint"
     schedule:
       interval: daily
+  - package-ecosystem: gomod
+    directory: "/tools/gh-aw"
+    schedule:
+      interval: daily

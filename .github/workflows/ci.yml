@@ -57,7 +57,55 @@ jobs:
           Join-Path (go env GOPATH) 'bin' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Run ghalint
-        run: ghalint run
+        run: ./scripts/Invoke-WorkflowLint.ps1
+
+  preview-compatibility:
+    name: Preview compatibility tooling (${{ matrix.os }})
+    needs: change-scope
+    if: ${{ needs.change-scope.outputs.run_ci == 'true' }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Test candidate selection, state, and publication validation
+        run: ./scripts/tests/Test-PreviewCompatibility.ps1
+
+      - name: Test CI change scope with Git fixtures
+        run: ./scripts/tests/Test-CiChangeScope.ps1
+
+      - name: Install pinned agentic workflow compiler
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $pin = [regex]::Match((Get-Content tools/gh-aw/go.mod -Raw), '(?m)^require github\.com/github/gh-aw (v\d+\.\d+\.\d+)\s*$')
+          if (-not $pin.Success) {
+            throw 'Invalid gh-aw compiler version.'
+          }
+          gh extension install github/gh-aw --pin $pin.Groups[1].Value
+          if ($LASTEXITCODE -ne 0) { throw 'Compiler installation failed.' }
+
+      - name: Check agentic workflow compilation and policy
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh aw compile docs-preview-compatibility --no-check-update
+          if ($LASTEXITCODE -ne 0) { throw 'Agentic workflow compilation failed.' }
+          $changed = git status --porcelain -- .github/workflows .github/aw .gitattributes
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect compiler outputs.' }
+          if ($changed) { throw "Recompile and commit the agentic workflow outputs: $changed" }
+          ./scripts/tests/Test-PreviewCompatibilityWorkflow.ps1
 
   build-test:
     name: Build and test

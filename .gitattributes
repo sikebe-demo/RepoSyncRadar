@@ -48,3 +48,5 @@
 **/bin/**            linguist-generated=true
 **/obj/**            linguist-generated=true
 **/Migrations/**     linguist-generated=true
+
+.github/workflows/*.lock.yml linguist-generated=true

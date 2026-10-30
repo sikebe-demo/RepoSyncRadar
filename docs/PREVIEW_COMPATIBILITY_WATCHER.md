@@ -31,7 +31,7 @@ execution is part of the checked-in implementation's offline validation.
 
 ## Daily runs, checkpoints, and recovery
 
-The compiled schedule runs daily; Actions also exposes manual dispatch. Runs
+The compiled schedule runs daily at 14:07 UTC; Actions also exposes manual dispatch. The cron is explicit because gh-aw seeds fuzzy `daily` schedules from the repository name, which would make compiler output differ in forks and fail the freshness check; the resulting compiler warning is expected. Runs
 are serialized without cancelling an in-flight run. Only the default branch
 can activate the watcher.
 

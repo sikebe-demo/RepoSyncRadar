@@ -2,7 +2,9 @@
 name: Docs preview compatibility
 description: Detect confirmed github/docs preview incompatibilities and propose regression-tested fixes.
 on:
-  schedule: daily
+  # Explicit cron keeps compiled output identical in forks; fuzzy schedules are seeded by repository name.
+  schedule:
+    - cron: "7 14 * * *"
   workflow_dispatch:
     inputs:
       base_sha:

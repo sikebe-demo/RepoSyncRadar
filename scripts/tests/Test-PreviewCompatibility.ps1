@@ -103,7 +103,10 @@ Set-FixtureFile 'data/tables/models.yml' "- name: C`n  cost: 3"
 Set-FixtureFile 'src/content-render/unified/mermaid.ts' 'export {}'
 Set-FixtureFile 'content/long.md' (('x' * 200) + "`n") * 1000
 $fixtureHead = Save-Fixture 'novel'
-$fixtureUrl = ([Uri]$upstream).AbsoluteUri
+# [Uri] casts of absolute Unix paths yield an empty AbsoluteUri on Linux, so build the file URL explicitly.
+$fixturePath = (Resolve-Path -LiteralPath $upstream).ProviderPath -replace '\\', '/'
+if (-not $fixturePath.StartsWith('/')) { $fixturePath = "/$fixturePath" }
+$fixtureUrl = "file://$fixturePath"
 
 function New-WorkDirectory { Join-Path $fixtureRoot "work-$([Guid]::NewGuid().ToString('N'))" }
 function Invoke-Analysis {
